@@ -1,0 +1,80 @@
+.video-chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .peer-info {
+    margin-bottom: 10px;
+  }
+  
+  .video-container {
+    position: relative;
+    width: 80%;
+    max-width: 800px;
+    height: 400px;
+    border: 2px solid black;
+    border-radius: 10px;
+    background: rgb(255, 255, 255);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  
+  .big-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .small-video {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 150px;
+    height: 100px;
+    border: 2px solid rgb(0, 0, 0);
+    border-radius: 5px;
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  button {
+    padding: 8px 15px;
+    border: none;
+    background: rgb(14, 16, 16);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  button:hover {
+    background: rgb(16, 4, 236);
+  }
+  
+  .video-chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: #d6cedd;
+    color: hwb(0 100% 0%); 
+}
+
+body {
+  background: linear-gradient(to bottom right, #654681, #400505); 
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+
