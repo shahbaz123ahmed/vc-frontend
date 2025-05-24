@@ -103,15 +103,61 @@ const VideoChat = () => {
     }
   };
 
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   const shareScreen = async () => {
+    if (isMobile()) {
+      alert('Screen sharing is not fully supported on mobile devices. Please use a desktop browser for this feature.');
+      return;
+    }
+
     try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: "always"
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        }
+      });
+
+      // Save the original stream to revert back later
+      const originalStream = userVideo.current.srcObject;
+
+      // Replace all tracks
+      const senders = peerInstance.current.getSenders();
+      const tracks = screenStream.getTracks();
+
+      for (const sender of senders) {
+        const track = tracks.find(t => t.kind === sender.track.kind);
+        if (track) {
+          sender.replaceTrack(track);
+        }
+      }
+
       userVideo.current.srcObject = screenStream;
+
+      // Handle stream end
       screenStream.getVideoTracks()[0].onended = () => {
-        alert("Screen sharing stopped.");
+        // Revert back to original stream
+        const senders = peerInstance.current.getSenders();
+        const tracks = originalStream.getTracks();
+
+        for (const sender of senders) {
+          const track = tracks.find(t => t.kind === sender.track.kind);
+          if (track) {
+            sender.replaceTrack(track);
+          }
+        }
+        userVideo.current.srcObject = originalStream;
       };
     } catch (err) {
       console.error('Error sharing screen:', err);
+      alert('Failed to share screen: ' + err.message);
     }
   };
 
