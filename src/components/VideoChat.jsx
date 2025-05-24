@@ -12,44 +12,76 @@ const VideoChat = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoDisabled, setIsVideoDisabled] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [stream, setStream] = useState(null);
   const userVideo = useRef();
   const peerVideo = useRef();
   const peerInstance = useRef(null);
   const mediaRecorder = useRef(null);
   const recordedChunks = useRef([]);
 
+  // Modify the getUserMedia calls with audio constraints
+  const mediaConstraints = {
+    video: true,
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    }
+  };
+
   useEffect(() => {
     const peer = new Peer();
+    
+    const initializeStream = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        setStream(mediaStream);
+        userVideo.current.srcObject = mediaStream;
+      } catch (err) {
+        console.error('Failed to get media stream:', err);
+      }
+    };
 
+    initializeStream();
+    
     peer.on('open', (id) => {
       setPeerId(id);
       socket.emit('join', id);
     });
 
     peer.on('call', (call) => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-        userVideo.current.srcObject = stream;
-        call.answer(stream);
-        call.on('stream', (remoteStream) => {
-          peerVideo.current.srcObject = remoteStream;
-        });
+      call.answer(stream);
+      call.on('stream', (remoteStream) => {
+        peerVideo.current.srcObject = remoteStream;
       });
     });
 
     peerInstance.current = peer;
 
     return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
       peer.destroy();
     };
   }, []);
 
   const callPeer = () => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-      userVideo.current.srcObject = stream;
-      const call = peerInstance.current.call(remotePeerId, stream);
-      call.on('stream', (remoteStream) => {
-        peerVideo.current.srcObject = remoteStream;
-      });
+    if (!stream) {
+      console.error('Local stream not initialized');
+      return;
+    }
+    
+    const call = peerInstance.current.call(remotePeerId, stream);
+    call.on('stream', (remoteStream) => {
+      peerVideo.current.srcObject = remoteStream;
     });
   };
 
@@ -131,8 +163,20 @@ const VideoChat = () => {
 
       {/* Video Container */}
       <div className="video-container">
-        <video ref={peerVideo} autoPlay playsInline className="big-video" />
-        <video ref={userVideo} autoPlay playsInline className="small-video" />
+        <video 
+          ref={peerVideo} 
+          autoPlay 
+          playsInline 
+          className="big-video"
+          volume={0.5} // Adjust this value as needed (0.0 to 1.0)
+        />
+        <video 
+          ref={userVideo} 
+          autoPlay 
+          playsInline 
+          className="small-video"
+          muted // Always mute local video to prevent feedback
+        />
       </div>
 
       {/* Buttons */}
